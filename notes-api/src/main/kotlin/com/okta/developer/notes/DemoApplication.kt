@@ -6,7 +6,10 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.core.Ordered
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.data.rest.core.annotation.HandleBeforeCreate
 import org.springframework.data.rest.core.annotation.RepositoryEventHandler
 import org.springframework.data.rest.core.annotation.RepositoryRestResource
@@ -49,7 +52,8 @@ data class Note(@Id @GeneratedValue var id: Long? = null,
 
 @RepositoryRestResource
 interface NotesRepository : JpaRepository<Note, Long> {
-    fun findAllByUser(name: String): List<Note>
+    fun findAllByUser(name: String, page: Pageable): Page<Any>
+    fun findAllByUserAndTitleContainingIgnoringCase(name: String, term: String, page: Pageable): Page<Any>
 }
 
 @Component
