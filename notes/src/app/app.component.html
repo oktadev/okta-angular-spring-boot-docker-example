@@ -27,5 +27,6 @@
 </nav>
 
 <div class="container-fluid pt-3">
+  <a *ngIf="!isAuthenticated">Please log in to manage your notes.</a>
   <router-outlet></router-outlet>
 </div>
