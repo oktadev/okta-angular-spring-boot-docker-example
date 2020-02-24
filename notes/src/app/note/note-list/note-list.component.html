@@ -17,30 +17,43 @@
       </form>
     </div>
     <div *ngIf="noteList.length > 0">
-      <div *ngIf="feedback" class="alert alert-{{feedback.type}}">{{ feedback.message }}</div>
+      <div *ngIf="feedback" class="alert alert-{{feedback.type}} m-2">{{ feedback.message }}</div>
       <div class="table-responsive">
         <table class="table table-centered table-hover mb-0" id="datatable">
           <thead>
           <tr>
-            <th class="border-top-0" scope="col">Id</th>
-            <th class="border-top-0" scope="col">Title</th>
-            <th class="border-top-0" scope="col">Text</th>
+            <th class="border-top-0" scope="col">#</th>
+            <th class="border-top-0" scope="col" sortable="title" (sort)="onSort($event)">Title</th>
+            <th class="border-top-0" scope="col" sortable="text" (sort)="onSort($event)">Text</th>
             <th class="border-top-0" scope="col" style="width:120px"></th>
           </tr>
           </thead>
           <tbody>
           <tr *ngFor="let item of noteList" [class.active]="item === selectedNote">
-
             <td>{{item.id}}</td>
             <td>{{item.title}}</td>
             <td>{{item.text}}</td>
             <td style="white-space: nowrap">
-              <a [routerLink]="['../notes', item.id ]" class="btn btn-secondary">Edit</a>&nbsp;
-              <button (click)="delete(item)" class="btn btn-danger">Delete</button>
+              <div class="btn-group" role="group">
+                <a [routerLink]="['../notes', item.id ]" class="btn btn-secondary">Edit</a>
+                <button (click)="delete(item)" class="btn btn-danger">Delete</button>
+              </div>
             </td>
           </tr>
           </tbody>
         </table>
+
+        <div>
+          <ngb-pagination
+            [collectionSize]="total$ | async" [(page)]="filter.page" [pageSize]="filter.size" (pageChange)="onPageChange(filter.page)">
+          </ngb-pagination>
+
+          <select class="custom-select" style="width: auto" name="pageSize" [(ngModel)]="filter.size" (ngModelChange)="onChange(filter.size)">
+            <option [ngValue]="10">10 items per page</option>
+            <option [ngValue]="20">20 items per page</option>
+            <option [ngValue]="100">100 items per page</option>
+          </select>
+        </div>
       </div>
     </div>
 </div>
