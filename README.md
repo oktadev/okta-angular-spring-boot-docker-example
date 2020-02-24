@@ -1,10 +1,11 @@
-# A CRUD Example App with Angular 9.0 and Spring Boot 2.2
+# Angular 9.0 + Bootstrap
  
-This example app shows how to build a basic CRUD app with Spring Boot 2.2, Kotlin, Spring Data, and Angular 9.0.
+This example app shows how to add Bootstrap to an Angular 9 app, configure validation, and implement searchable, sortable, and pageable data.
 
-Please read [Build a CRUD App with Angular 9 and Spring Boot](https://developer.okta.com/blog/2020/01/06/crud-angular-9-spring-boot-2) to see how this app was created.
+<!-- Please read [Build a CRUD App with Angular 9 and Spring Boot](https://developer.okta.com/blog/2020/01/06/crud-angular-9-spring-boot-2) to see how this app was created. -->
 
 **Prerequisites:** 
+
 * [Node 12](https://nodejs.org/)+
 * [Java 11](https://adoptopenjdk.net/)+
 * An [Okta Developer Account](https://developer.okta.com/signup/)
@@ -21,8 +22,8 @@ Please read [Build a CRUD App with Angular 9 and Spring Boot](https://developer.
 To install this example application, run the following commands:
 
 ```bash
-git clone https://github.com/oktadeveloper/okta-spring-boot-2-angular-9-example.git
-cd okta-spring-boot-2-angular-9-example
+git clone https://github.com/oktadeveloper/okta-angular-bootstrap-example.git
+cd okta-angular-bootstrap-example
 ```
 
 This will get a copy of the project installed locally. To install all of its dependencies and start each app, follow the instructions below.
@@ -36,7 +37,7 @@ To create a new OIDC app for Spring Boot on Okta:
 3. Give the application a name and add `http://localhost:8080/login/oauth2/code/okta` as a login redirect URI. 
 4. Click **Done**.
 
-Create an `okta.env` file and copy your settings into it.
+Create an `okta.env` file in the `notes-api` directory and copy your settings into it.
 
 ```bash
 export OKTA_OAUTH2_ISSUER=https://{yourOktaDomain}/oauth2/default
@@ -81,6 +82,8 @@ npm install && npm start
 
 Open your browser to <http://localhost:4200>, log in, and create notes to your hearts content!
 
+**TIP:** If you get a CORS error, you'll need to add `http://localhost:4200` as a trusted origin on Okta (**API** > **Trusted Origins**).
+
 ## Links
 
 This example uses the following open source libraries from Okta:
@@ -90,7 +93,7 @@ This example uses the following open source libraries from Okta:
 
 ## Help
 
-Please post any questions as comments on the [blog post](https://developer.okta.com/blog/2020/01/06/crud-angular-9-spring-boot-2), or visit our [Okta Developer Forums](https://devforum.okta.com/).
+Please post any questions as comments on the [blog post](), or visit our [Okta Developer Forums](https://devforum.okta.com/).
 
 ## License
 
