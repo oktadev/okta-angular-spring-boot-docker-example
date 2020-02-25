@@ -43,8 +43,8 @@
           </tbody>
         </table>
 
-        <div>
-          <ngb-pagination
+        <div class="d-flex justify-content-between p-2">
+          <ngb-pagination [maxSize]="10"
             [collectionSize]="total$ | async" [(page)]="filter.page" [pageSize]="filter.size" (pageChange)="onPageChange(filter.page)">
           </ngb-pagination>
 
