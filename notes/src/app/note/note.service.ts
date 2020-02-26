@@ -1,8 +1,9 @@
 import { Note } from './note';
 import { NoteFilter } from './note-filter';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
 const headers = new HttpHeaders().set('Accept', 'application/json');
 
@@ -10,6 +11,7 @@ const headers = new HttpHeaders().set('Accept', 'application/json');
 export class NoteService {
   noteList: Note[] = [];
   api = 'http://localhost:8080/api/notes';
+  size$ = new BehaviorSubject<number>(0);
 
   constructor(private http: HttpClient) {
   }
@@ -31,11 +33,21 @@ export class NoteService {
   }
 
   find(filter: NoteFilter): Observable<Note[]> {
-    const params = {
+    const params: any = {
       title: filter.title,
+      sort: `${filter.column},${filter.direction}`,
+      size: filter.size,
+      page: filter.page
     };
+    if (!filter.direction) { delete params.sort; }
+
     const userNotes = 'http://localhost:8080/user/notes';
-    return this.http.get<Note[]>(userNotes, {params, headers});
+    return this.http.get(userNotes, {params, headers}).pipe(
+      map((response: any) => {
+        this.size$.next(response.totalElements);
+        return response.content;
+      })
+    );
   }
 
   save(entity: Note): Observable<Note> {
