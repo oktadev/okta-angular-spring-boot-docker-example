@@ -35,11 +35,11 @@ export class NoteService {
   find(filter: NoteFilter): Observable<Note[]> {
     const params: any = {
       title: filter.title,
-      sort: `${filter.column},${filter.sort}`,
+      sort: `${filter.column},${filter.direction}`,
       size: filter.size,
       page: filter.page
     };
-    if (!filter.sort) { delete params.sort; }
+    if (!filter.direction) { delete params.sort; }
 
     const userNotes = 'http://localhost:8080/user/notes';
     return this.http.get(userNotes, {params, headers}).pipe(

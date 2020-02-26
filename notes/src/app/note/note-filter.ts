@@ -1,7 +1,7 @@
 export class NoteFilter {
   title = '';
   column: string;
-  sort: string;
+  direction: string;
   page = 0;
   size = 20;
 }

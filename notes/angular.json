@@ -119,12 +119,6 @@
           }
         }
       }
-    }
-  },
-  "defaultProject": "notes",
-  "schematics": {
-    "@schematics/angular:component": {
-      "styleext": "scss"
-    }
-  }
+    }},
+  "defaultProject": "notes"
 }

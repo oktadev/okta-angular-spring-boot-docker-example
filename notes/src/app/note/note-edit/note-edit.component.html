@@ -17,8 +17,8 @@
           <label for="title">Title</label>
           <input [(ngModel)]="note.title" id="title" name="title" class="form-control" required
                  #name="ngModel" [ngClass]="{'is-invalid': name.touched && name.invalid,  'is-valid': name.touched && name.valid}">
-          <div [hidden]="name.valid || name.pristine" style="display: block" class="invalid-feedback">
-            Name is required
+          <div [hidden]="name.valid" style="display: block" class="invalid-feedback">
+            Title is required
           </div>
         </div>
 
@@ -27,7 +27,7 @@
           <input [(ngModel)]="note.text" id="text" name="text" class="form-control">
         </div>
 
-        <button type="submit" class="btn btn-primary" [disabled]="!editForm.form.valid" [disabled]="!editForm.form.valid">Save</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!editForm.form.valid">Save</button>
         <button type="button" class="btn btn-secondary ml-2" (click)="cancel()">Cancel</button>
       </form>
     </div>
