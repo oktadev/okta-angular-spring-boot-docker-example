@@ -52,7 +52,7 @@ data class Note(@Id @GeneratedValue var id: Long? = null,
 @RepositoryRestResource
 interface NotesRepository : JpaRepository<Note, Long> {
     fun findAllByUser(name: String, pageable: Pageable): Page<Note>
-    fun findAllByUserAndTitleContainingIgnoringCase(name: String, term: String, pageable: Pageable): Page<Note>
+    fun findAllByUserAndTitleContainingIgnoreCase(name: String, title: String, pageable: Pageable): Page<Note>
 }
 
 @Component

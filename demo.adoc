@@ -5,17 +5,13 @@
 
 == Angular + Bootstrap Demo Steps
 
-In this demo, I'll show how how to Bootstrap into an Angular 9 app. I'll also convert the app to use Sass (because CSS is more fun with Sass), make the app look good, add form validation, and write some code to develop a searchable, sortable, and pageable data table. The last part sounds hard, but it only requires < 10 lines of code on the Spring Boot side of things. Kotlin and Spring Data JPA FTW!
+In this demo, I'll show how to integrate Bootstrap into an Angular 9 app. I'll also convert the app to use Sass (because CSS is more fun with Sass), make the app look good, add form validation, and write some code to develop a searchable, sortable, and pageable data table. The last part sounds hard, but it only requires < 10 lines of code on the Spring Boot side of things. Kotlin and Spring Data JPA FTW!
 
 // This is a demo script with the bare-bones steps you need to https://developer.okta.com/blog/2020/01/06/crud-angular-9-spring-boot-2[build a secure CRUD app with Angular 9 and Spring Boot 2.2].
 
 NOTE: This demo starts from a previous tutorial: https://developer.okta.com/blog/2020/01/06/crud-angular-9-spring-boot-2[Build a CRUD App with Angular 9 and Spring Boot 2.2].
 
-**Prerequisites:**
-
-* https://nodejs.org/[Node 12]+
-* https://adoptopenjdk.net/[Java 11]+
-* An https://developer.okta.com/signup/[Okta Developer Account]
+**Prerequisites:** https://nodejs.org/[Node 12], https://adoptopenjdk.net/[Java 11], and an https://developer.okta.com/signup/[Okta Developer Account].
 
 TIP: The brackets at the end of some steps indicate the IntelliJ Live Templates to use. You can find the template definitions at https://github.com/mraible/idea-live-templates[mraible/idea-live-templates].
 
@@ -27,7 +23,7 @@ toc::[]
 
   git clone https://github.com/oktadeveloper/okta-spring-boot-2-angular-9-example.git okta-angular-bootstrap-example
 
-. Navigate into `okta-angular-bootstrap-example` and `npm install`
+. Navigate into `okta-angular-bootstrap-example/notes` and `npm install`
 
 . Add Bootstrap and NG Bootstrap
 
@@ -35,7 +31,7 @@ toc::[]
 
 . Add `NgbModule` to `app.module.ts`
 
-. Run `ng serve -o` to show blank screen and error in console
+. Run `ng serve -o`; show blank screen and error in console
 
 . Run `ng add @angular/localize` to fix this error
 
@@ -115,11 +111,11 @@ toc::[]
 
 === Make Your Angular App Beautiful with Bootstrap
 
-. Add a Navbar in `app.component.html` [`ng-navbar`]
+. Add a Navbar in `app.component.html` [`bs-navbar`]
 
 . Remove the login and logout buttons from `home.component.html`
 
-. Run `ng serve` to see your stylish app
+. Show your stylish app and unresponsive menu
 
 . Add a click handler on the toggler and `ngbCollapse` to the menu
 
@@ -137,7 +133,9 @@ toc::[]
     <div class="card-body">
       <h2 class="card-title">
       <div class="card-text">
-      // add m-2 to feedback
+      // form.inline-form
+      // title.ml-s mr-2
+      // feedback.m-2
 
 === Add Validation and Bootstrap to the Note Edit Template
 
@@ -147,15 +145,12 @@ toc::[]
 
 . Rearrange things to use the proper `card-*` classes
 
-. Make the title field **required** [`ng-required`]
+. Make the title field **required** [`bs-required`]
 
-  <div class="form-group">
-    <label for="title">Title</label>
-    <input [(ngModel)]="note.title" id="title" name="title" class="form-control" required
-           #name="ngModel" [ngClass]="{'is-invalid': name.touched && name.invalid,  'is-valid': name.touched && name.valid}">
-    <div [hidden]="name.valid" style="display: block" class="invalid-feedback">
-      Title is required
-    </div>
+  <input [(ngModel)]="note.title" id="title" name="title" class="form-control" required
+         #name="ngModel" [ngClass]="{'is-invalid': name.touched && name.invalid,  'is-valid': name.touched && name.valid}">
+  <div [hidden]="name.valid" style="display: block" class="invalid-feedback">
+    Title is required
   </div>
 
 . Show how the title is required and losing focus highlights the field
@@ -170,21 +165,21 @@ toc::[]
           repository.findAllByUser(principal.name)
       } else {
           println("Searching for title: ${title}")
-          repository.findAllByUserAndTitleContainingIgnoringCase(principal.name, title)
+          repository.findAllByUserAndTitleContainingIgnoreCase(principal.name, title)
       }
   }
 
-. Add a new `findAllByUserAndTitleContainingIgnoringCase()` method to `NotesRepository`
+. Add a new `findAllByUserAndTitleContainingIgnoreCase()` method to `NotesRepository`
 
 . Restart your server and show how you can search for notes by title
 
 === Add Sort Functionality with Angular and Bootstrap
 
-. Create a `sortable.directive.ts` [`ng-sortable`]
+. Create a `sortable.directive.ts` [`bs-sortable`]
 
 . Add `SortableHeaderDirective` as a declaration in `note.module.ts`
 
-. Add a `headers` variable to `notes-list.component.ts` and an `onSort()` method [`ng-sort`]
+. Add a `headers` variable to `notes-list.component.ts` and an `onSort()` method [`bs-sort`]
 
   @ViewChildren(SortableHeaderDirective) headers: QueryList<SortableHeaderDirective>;
   ..
@@ -195,7 +190,6 @@ toc::[]
         header.direction = '';
       }
     });
-
     this.filter.column = column;
     this.filter.direction = direction;
     this.search();
@@ -203,7 +197,7 @@ toc::[]
 
 . Update the `note-filter.ts` to have `column` and `direction` properties
 
-. Modify the `find()` method in `NoteService` to pass a `sort` parameter when appropriate [`ng-find`]
+. Modify the `find()` method in `NoteService` to pass a `sort` parameter when appropriate [`bs-find`]
 
   find(filter: NoteFilter): Observable<Note[]> {
     const params: any = {
@@ -211,7 +205,6 @@ toc::[]
       sort: `${filter.column},${filter.direction}`,
     };
     if (!filter.direction) { delete params.sort; }
-
     const userNotes = 'http://localhost:8080/user/notes';
     return this.http.get(userNotes, {params, headers}).pipe(
       map((response: any) => {
@@ -225,11 +218,11 @@ toc::[]
   <th class="border-top-0" scope="col" sortable="title" (sort)="onSort($event)">Title</th>
   <th class="border-top-0" scope="col" sortable="text" (sort)="onSort($event)">Text</th>
 
-. Add CSS in `styles.scss` to show a sort indicator [`css-sort`]
+. Add CSS in `styles.scss` to show a sort indicator [`bs-css-sort`]
 
 === Add Sorting and Paging in Spring Boot with Spring Data JPA
 
-. Show how https://docs.spring.io/spring-data/rest/docs/current/reference/html/#paging-and-sorting[Spring Data has excellent support for paging and sorting]
+. https://docs.spring.io/spring-data/rest/docs/current/reference/html/#pagibs-and-sorting[Spring Data has excellent support for paging and sorting]
 
 . Add a `Pageable` argument to `UserController#notes()`, add `pageable` as an argument, and return `Page` instead of `List`
 
@@ -245,14 +238,14 @@ toc::[]
 
 === Add Pagination with Angular and Bootstrap
 
-. Use https://ng-bootstrap.github.io/#/components/pagination/overview[NG Bootstrap's `<ngb-pagination>`] to add pagination in Angular
+. Use https://bs-bootstrap.github.io/#/components/pagination/overview[NG Bootstrap's `ngb-pagination`] to add pagination in Angular
 
 . Add `page` and `size` variables to `note-filter.ts`
 
   page = 0;
   size = 20;
 
-. Just after `</table>` in `note-list.component.html`, add a pagination component and page size selector [`ng-pagination`]
+. Just after `</table>` in `note-list.component.html`, add a pagination component and page size selector [`bs-pagination`]
 
 . Add `NgbModule` as an import to `note.module.ts`
 
@@ -264,7 +257,7 @@ toc::[]
     this.total$ = this.noteService.size$;
   }
 
-. Add `onPageChange()`, `onChange()` method, and modify `onSort()` to set the page to 0 [`ng-change`]
+. Add `onPageChange()`, `onChange()` method, and modify `onSort()` to set the page to 0 [`bs-change`]
 
 . Update `notes.service.ts` to add a `size$` observable and parameters for the page size and page number
 
@@ -328,6 +321,7 @@ That's it! 🎉
 
 . Start Keycloak, Elasticsearch, and your app
 
+  killall java
   docker-compose -f src/main/docker/keycloak.yml up -d
   docker-compose -f src/main/docker/elasticsearch.yml up -d
   ./gradlew
@@ -338,7 +332,7 @@ That's it! 🎉
 
 . Show how to https://www.jhipster.tech/security/#okta[make JHipster work with Okta]
 
-  source ~/okta.env
+  source ~/.okta.env
   ./gradlew
 
 

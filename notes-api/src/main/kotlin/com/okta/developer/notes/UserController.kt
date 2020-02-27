@@ -18,7 +18,7 @@ class UserController(val repository: NotesRepository) {
             repository.findAllByUser(principal.name, pageable)
         } else {
             println("Searching for title: ${title}")
-            repository.findAllByUserAndTitleContainingIgnoringCase(principal.name, title, pageable)
+            repository.findAllByUserAndTitleContainingIgnoreCase(principal.name, title, pageable)
         }
     }
 
