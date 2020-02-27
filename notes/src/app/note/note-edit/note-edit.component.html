@@ -6,7 +6,7 @@
   <div class="card-body">
     <h2 class="card-title">Notes Detail</h2>
     <div class="card-text">
-      <div *ngIf="feedback.message" class="alert alert-{{feedback.type}}">{{ feedback.message }}</div>
+      <div *ngIf="feedback.message" class="alert alert-{{feedback.type}}" class="m-2">{{ feedback.message }}</div>
       <form *ngIf="note" #editForm="ngForm" (ngSubmit)="save()">
         <div class="form-group">
           <label>Id</label>
@@ -16,7 +16,7 @@
         <div class="form-group">
           <label for="title">Title</label>
           <input [(ngModel)]="note.title" id="title" name="title" class="form-control" required
-                 #name="ngModel" [ngClass]="{'is-invalid': name.touched && name.invalid,  'is-valid': name.touched && name.valid}">
+                 #name="ngModel" [ngClass]="{'is-invalid': name.touched && name.invalid, 'is-valid': name.touched && name.valid}">
           <div [hidden]="name.valid" style="display: block" class="invalid-feedback">
             Title is required
           </div>
