@@ -4,13 +4,14 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 const headers = new HttpHeaders().set('Accept', 'application/json');
 
 @Injectable()
 export class NoteService {
   noteList: Note[] = [];
-  api = 'http://localhost:8080/api/notes';
+  api = `${environment.apiUrl}/api/notes`;
   size$ = new BehaviorSubject<number>(0);
 
   constructor(private http: HttpClient) {
@@ -41,7 +42,7 @@ export class NoteService {
     };
     if (!filter.direction) { delete params.sort; }
 
-    const userNotes = 'http://localhost:8080/user/notes';
+    const userNotes = `${environment.apiUrl}/user/notes`;
     return this.http.get(userNotes, {params, headers}).pipe(
       map((response: any) => {
         this.size$.next(response.totalElements);

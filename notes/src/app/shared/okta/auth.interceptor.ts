@@ -2,6 +2,7 @@ import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/c
 import { Observable, from } from 'rxjs';
 import { OktaAuthService } from '@okta/okta-angular';
 import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -15,7 +16,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private async handleAccess(request: HttpRequest<any>, next: HttpHandler): Promise<HttpEvent<any>> {
     // Only add an access token to whitelisted origins
-    const allowedOrigins = ['http://localhost'];
+    const allowedOrigins = [environment.apiUrl];
     if (allowedOrigins.some(url => request.urlWithParams.includes(url))) {
       const accessToken = await this.oktaAuth.getAccessToken();
       request = request.clone({
