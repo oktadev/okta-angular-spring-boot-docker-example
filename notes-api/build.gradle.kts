@@ -47,7 +47,12 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+val profile = if (project.hasProperty("prod")) "prod" else "dev"
+
 tasks.bootRun {
-    val profile = if (project.hasProperty("prod")) "prod" else "dev"
     args("--spring.profiles.active=${profile}")
+}
+
+tasks.bootJar {
+    rename("application-${profile}.properties", "application.properties")
 }
