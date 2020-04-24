@@ -10,5 +10,8 @@
     }
   },
   "https_only": true,
-  "root": "dist/notes"
+  "root": "dist/notes/",
+  "routes": {
+    "/**": "index.html"
+  }
 }
