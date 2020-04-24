@@ -56,3 +56,4 @@ tasks.bootRun {
 tasks.bootJar {
     rename("application-${profile}.properties", "application.properties")
 }
+
