@@ -1,7 +1,7 @@
 {
   "headers": {
     "/**": {
-      "Content-Security-Policy": "default-src 'self'; img-src 'self' data:;",
+      "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self' data:",
       "Referrer-Policy": "no-referrer, strict-origin-when-cross-origin",
       "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
       "X-Content-Type-Options": "nosniff",
