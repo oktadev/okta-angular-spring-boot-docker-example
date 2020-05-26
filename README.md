@@ -86,7 +86,7 @@ Open your browser to <http://localhost:4200>, log in, and create notes to your h
 
 **TIP:** If you get a CORS error, you'll need to add `http://localhost:4200` as a trusted origin on Okta (**API** > **Trusted Origins**).
 
-For instructions on how to deploy these applications, please read the blog post.
+For instructions on how to deploy these applications to the cloud, please read the blog post!
 
 ## Links
 
