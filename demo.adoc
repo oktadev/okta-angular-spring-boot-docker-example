@@ -33,8 +33,8 @@ okta-angular-deployment-example
 . https://id.heroku.com/login[Log in to Heroku] and create a new app (e.g., `bootiful-angular`).
 
 . After creating your app, click on the **Resources** tab and add the **Okta** add-on.
-
-. _Mention that you'll need a credit card to provision add-ons._
++
+_Mention that you'll need a credit card to provision add-ons._
 
 . Go to your app's **Settings** tab and click the **Reveal Config Vars** button.
 
@@ -59,9 +59,11 @@ source okta.env
 +
 TIP: Show how to configure environment variables in IDEA for `DemoApplication`.
 
-. Configure Angular for OIDC authentication by modifying its `auth-routing.module.ts` to use the generated issuer, client ID, and update the callback URL.
+. Configure Angular for OIDC authentication by modifying its `auth-routing.module.ts` to use the generated issuer and client ID.
 
-. Modify the Heroku-created browser app and add `http://localhost:4200/callback` as a **Login redirect URI** and `http://localhost:4200` as a **Logout redirect URI**.
+. Modify the Heroku-created browser app and add `\http://localhost:4200/callback` as a **Login redirect URI** and `\http://localhost:4200` as a **Logout redirect URI**.
+
+. Add `\http://localhost:4200` as a trusted origin in **API** > **Trusted Origins**.
 
 . Install the Angular app's dependencies and start it.
 +
@@ -97,7 +99,14 @@ plugins {
 }
 ----
 
-. Run the following command in the `notes-api` directory.
+. For compatibility with Spring Boot 2.3, you'll need to update the Gradle Wrapper to use Gradle 6.3+.
++
+[source,shell]
+----
+./gradlew wrapper --gradle-version=6.4 --distribution-type=bin
+----
+
+. Upgrade to the latest versions in the `notes-api` directory.
 +
 [source,shell]
 ----
@@ -111,13 +120,20 @@ plugins {
 [source,shell]
 ----
 npm i -g npm-check-updates
+ncu -u
+----
+
+. Change the TypeScript version in `package.json` to match Angular's expected version.
++
+[source,json]
+----
+"typescript": "~3.8.3"
 ----
 
 . Then run the following commands in the `notes` directory:
 +
 [source,shell]
 ----
-ncu -u
 npm i
 npm audit fix
 ng serve
@@ -132,18 +148,39 @@ ng serve
 git commit -am "Update dependencies to latest versions"
 ----
 
+==== Configure Production URLs
+
+There are a few places where `localhost` is hard-coded:
+
+1. `notes-api/src/main/kotlin/.../DemoApplication.kt` has `\http://localhost:4200`
+2. `notes/src/app/shared/okta/auth-interceptor.ts` has `\http://localhost`
+3. `notes/src/app/note/note.service.ts` has `\http://localhost:8080`
+
+You need to change Spring Boot's code so other origins can make CORS requests too.
+
 . Open `DemoApplication.kt` and change the `simpleCorsFilter` bean so it configures the allowed origins from your Spring environment.
 +
 [source,kotlin]
 ----
-import org.springframework.beans.factory.annotation.Value
-
 @SpringBootApplication
 class DemoApplication {
 
     @Value("#{ @environment['allowed.origins'] ?: {} }")
     private lateinit var allowedOrigins: List<String>
-    ...
+
+    @Bean
+    fun simpleCorsFilter(): FilterRegistrationBean<CorsFilter> {
+        val source = UrlBasedCorsConfigurationSource()
+        val config = CorsConfiguration()
+        config.allowCredentials = true
+        config.allowedOrigins = allowedOrigins
+        config.allowedMethods = listOf("*");
+        config.allowedHeaders = listOf("*")
+        source.registerCorsConfiguration("/**", config)
+        val bean = FilterRegistrationBean(CorsFilter(source))
+        bean.order = Ordered.HIGHEST_PRECEDENCE
+        return bean
+    }
 }
 ----
 
@@ -269,9 +306,6 @@ spring.datasource.password=
 +
 [source,kotlin]
 ----
-import org.springframework.context.annotation.Profile
-...
-
 @Profile("dev")
 class DataInitializer(val repository: NotesRepository) : ApplicationRunner {...}
 ----
@@ -355,7 +389,7 @@ git push heroku master
 
 . Run `heroku open` and log in.
 
-. Add a `HomeController` [`kotlin-hello`]
+. Add a `HomeController` [`kotlin-home`]
 +
 [source,kotlin]
 ----
@@ -384,6 +418,8 @@ git commit -am "Add HomeController"
 git push heroku master
 ----
 
+. Show `HomeController` workin on Heroku.
+
 === Deploy Angular to Heroku
 
 . Create another app on Heroku for the Angular frontend.
@@ -394,7 +430,7 @@ heroku create
 ----
 
 . Set the `APP_BASE` config variable and add the necessary buildpacks.
-
++
 [source,shell]
 ----
 APP_NAME=<app-name-from-heroku-create>
@@ -421,7 +457,7 @@ heroku buildpacks:add heroku/nodejs -a $APP_NAME
 +
 [source,shell]
 ----
-git commit -am "Prepare for Heroku"
+git commit -am "Prepare Angular for Heroku"
 git remote add angular https://git.heroku.com/<your-app-name>.git
 git push angular master
 ----
@@ -435,8 +471,8 @@ heroku open --remote angular
 
 . You won't be able to log in to your app until you modify its Login redirect URI on Okta.
 
-  * **Login redirect URI**: `https://<angular-app-on-heroku>.herokuapp.com/callback`
-  * **Logout redirect URI**:  `https://<angular-app-on-heroku>.herokuapp.com`
+  * **Login redirect URI**: `\https://<angular-app-on-heroku>.herokuapp.com/callback`
+  * **Logout redirect URI**:  `\https://<angular-app-on-heroku>.herokuapp.com`
 
 . You should be able to log in now, but you won't be able to add any notes. Add an `ALLOWED_ORIGINS` variable in your Spring Boot app.
 +
@@ -456,9 +492,11 @@ heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
 
 ==== Make Your Angular App More Secure on Heroku
 
-If you access it using `http` (instead of `https`), it won't work. You'll also score an **F** when you test it using https://securityheaders.com[securityheaders.com].
+. Show how accessing the using `http` (instead of `https`) doesn't work.
 
-. Create a `notes/static.json` file with the configuration for secure headers and redirect all HTTP requests to HTTPS.
+. Show security headers score using https://securityheaders.com[securityheaders.com].
+
+. Create a `notes/src/static.json` file with the configuration for secure headers and redirect all HTTP requests to HTTPS.
 +
 [source,json]
 ----
@@ -496,10 +534,22 @@ If you access it using `http` (instead of `https`), it won't work. You'll also s
 },
 ----
 
+. Modify `angular.json` to include `static.json` in its assets.
++s
+[source,json]
+----
+"assets": [
+  "src/static.json",
+  "src/favicon.ico",
+  "src/assets"
+],
+----
+
 . Commit your changes to Git, add the static buildpack, and redeploy your Angular app.
 +
 [source,shell]
 ----
+git add src/static.json
 git commit -am "Configure secure headers and static buildpack"
 heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static.git --remote angular
 git push angular master
@@ -525,7 +575,6 @@ git checkout -b firebase
 +
 [source,shell]
 ----
-cd notes
 ng add @angular/fire
 ----
 
@@ -552,7 +601,9 @@ ALLOWED_ORIGINS='https://stark-lake-39546.herokuapp.com,https://ng-notes-1337.we
 
 ==== Strong Security Headers on Firebase
 
-. If you test your new Firebase site on https://securityheaders.com/[securityheaders.com], you'll score a **D**. Luckily, you can https://firebase.google.com/docs/hosting/full-config#headers[configure headers] in your `firebase.json` file.
+. Test Firebase site on https://securityheaders.com/[securityheaders.com] to show how it scores a **D**.
+
+. To fix this, you can https://firebase.google.com/docs/hosting/full-config#headers[configure headers] in your `firebase.json` file.
 +
 [source,json]
 ----
