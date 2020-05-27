@@ -550,7 +550,7 @@ ALLOWED_ORIGINS='https://stark-lake-39546.herokuapp.com,https://ng-notes-1337.we
   - **Login redirect URI**: `\https://ng-notes-1337.web.app/callback`
   - **Logout redirect URI**: `\https://ng-notes-1337.web.app`
 
-==== Improve Security Headers for Firebase
+==== Strong Security Headers on Firebase
 
 . If you test your new Firebase site on https://securityheaders.com/[securityheaders.com], you'll score a **D**. Luckily, you can https://firebase.google.com/docs/hosting/full-config#headers[configure headers] in your `firebase.json` file.
 +
@@ -654,7 +654,7 @@ heroku config:edit --remote heroku
 
 . Run `ng deploy` again and you should be able to log in successfully.
 
-==== Improve Security Headers for Netlify
+==== Better Security Headers on Netlify
 
 If you test your new Firebase site on https://securityheaders.com/[securityheaders.com], you'll score a **D**. Netlify allows you to add https://docs.netlify.com/routing/headers/[custom headers] to improve your score.
 
@@ -794,7 +794,7 @@ heroku config:edit --remote heroku
 
 . Now you should be able to authenticate to your Angular app on AWS successfully!
 
-==== Improve Security Headers for AWS CloudFront + S3
+==== Awesome Security Headers with AWS CloudFront + S3
 
 If you test your new CloudFront + S3 site on https://securityheaders.com/[securityheaders.com], you'll get an **F**. To solve this, you can use https://aws.amazon.com/blogs/networking-and-content-delivery/adding-http-security-headers-using-lambdaedge-and-amazon-cloudfront/[Lambda@Edge to add security headers].
 
