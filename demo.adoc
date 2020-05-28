@@ -770,7 +770,7 @@ git checkout -b aws
   - A Secret Access Key
   - An Access Key ID
 
-. https://portal.aws.amazon.com/billing/signup[Create an AWS account]. After creating an account, go to the https://s3.console.aws.amazon.com/[Amazon S3 console]. Click **Create Bucket** and give it a name you'll remember. Use the default region selected for you and click **Create Bucket**.
+. After https://portal.aws.amazon.com/billing/signup[creating an account], go to the https://s3.console.aws.amazon.com/[Amazon S3 console]. Click **Create Bucket** and give it a name you'll remember. Use the default region selected for you and click **Create Bucket**.
 
 . To create the secret access key, go to your https://console.aws.amazon.com/iam/home?nc2=h_m_sc#/security_credentials[security credentials page]. Expand the **Access keys** section, and then **Create New Access Key**. Click **Show Access Key** and copy the values into a text editor.
 
@@ -785,7 +785,9 @@ When prompted, enter your region, bucket name, access key, and access key ID. Wh
 +
 CAUTION: This process writes these raw values to your `angular.json`. For a more secure setup, use environment variables: `NG_DEPLOY_AWS_ACCESS_KEY_ID`, `NG_DEPLOY_AWS_SECRET_ACCESS_KEY`, `NG_DEPLOY_AWS_BUCKET` and `NG_DEPLOY_AWS_REGION`.
 
-. After deploying your Angular app, you need to configure S3 for static website hosting. Go to your bucket > **Properties** > **Static website hosting**. Take note of the endpoint URL at the top of the card, you'll need this in a minute.
+. Run `ng deploy`.
+
+. Next, you need to configure S3 for static website hosting. Go to your bucket > **Properties** > **Static website hosting**. Take note of the endpoint URL at the top of the card, you'll need this in a minute.
 
 . Type `index.html` for the index and error document and click **Save**.
 
