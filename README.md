@@ -1,6 +1,10 @@
-# Angular 9.0 + Bootstrap
+# Angular Deployment Example
  
-This example app shows how to add Bootstrap to an Angular 9 app, configure validation, and implement searchable, sortable, and pageable data. Please read [Build Beautiful Angular Apps with Bootstrap](https://developer.okta.com/blog/2020/03/02/angular-bootstrap) to see how this app was created.
+This example shows how to deploy Angular and Spring Boot to Heroku. It also shows how to deploy Angular to Firebase, Netlify, and AWS S3 using `ng deploy`. 
+
+<!-- 
+Please read [Build Beautiful Angular Apps with Bootstrap](https://developer.okta.com/blog/2020/03/02/angular-bootstrap) to see how this app was created.
+-->
 
 **Prerequisites:** 
 
@@ -20,8 +24,8 @@ This example app shows how to add Bootstrap to an Angular 9 app, configure valid
 To install this example application, run the following commands:
 
 ```bash
-git clone https://github.com/oktadeveloper/okta-angular-bootstrap-example.git
-cd okta-angular-bootstrap-example
+git clone https://github.com/oktadeveloper/okta-angular-deployment-example.git
+cd okta-angular-deployment-example
 ```
 
 This will get a copy of the project installed locally. To install all of its dependencies and start each app, follow the instructions below.
@@ -59,14 +63,14 @@ To create a new OIDC app for Angular on Okta:
 
 1. Log in to your developer account, navigate to **Applications**, and click on **Add Application**.
 3. Select **Single-Page App** and click **Next**. 
-4. Give the application a name, set the login redirect URI to `http://localhost:4200/implicit/callback`, and click **Done**.
+4. Give the application a name, set the login redirect URI to `http://localhost:4200/callback`, and click **Done**.
 
 Copy the `issuer` and `clientId` into `notes/src/app/auth-routing.module.ts`.
 
 ```typescript
 const oktaConfig = {
   issuer: 'https://{yourOktaDomain}/oauth2/default',
-  redirectUri: window.location.origin + '/implicit/callback',
+  redirectUri: window.location.origin + '/callback',
   clientId: '{yourClientId}',
   pkce: true
 };
@@ -82,6 +86,8 @@ Open your browser to <http://localhost:4200>, log in, and create notes to your h
 
 **TIP:** If you get a CORS error, you'll need to add `http://localhost:4200` as a trusted origin on Okta (**API** > **Trusted Origins**).
 
+For instructions on how to deploy these applications to the cloud, please read the blog post!
+
 ## Links
 
 This example uses the following open source libraries from Okta:
@@ -91,7 +97,7 @@ This example uses the following open source libraries from Okta:
 
 ## Help
 
-Please post any questions as comments on the [blog post](https://developer.okta.com/blog/2020/03/02/angular-bootstrap), or visit our [Okta Developer Forums](https://devforum.okta.com/).
+Please post any questions as comments on the [blog post](), or visit our [Okta Developer Forums](https://devforum.okta.com/).
 
 ## License
 

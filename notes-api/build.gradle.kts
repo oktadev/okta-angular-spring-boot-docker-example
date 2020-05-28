@@ -53,7 +53,7 @@ tasks.bootRun {
     args("--spring.profiles.active=${profile}")
 }
 
-tasks.bootJar {
+tasks.processResources {
     rename("application-${profile}.properties", "application.properties")
 }
 
