@@ -503,7 +503,7 @@ heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
 {
   "headers": {
     "/**": {
-      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com",
       "Referrer-Policy": "no-referrer, strict-origin-when-cross-origin",
       "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
       "X-Content-Type-Options": "nosniff",
@@ -601,7 +601,7 @@ ALLOWED_ORIGINS='https://stark-lake-39546.herokuapp.com,https://ng-notes-1337.we
   "headers": [
     {
       "key": "Content-Security-Policy",
-      "value": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'"
+      "value": "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com"
     },
     {
       "key": "Referrer-Policy",
@@ -703,7 +703,7 @@ If you test your new Firebase site on https://securityheaders.com/[securityheade
 [source,text]
 ----
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com
   Referrer-Policy: no-referrer, strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
@@ -857,7 +857,7 @@ exports.handler = (event, context, callback) => {
   const headers = response.headers;
 
   // set headers
-  headers['content-security-policy'] = [{key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'"}];
+  headers['content-security-policy'] = [{key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com"}];
   headers['referrer-policy'] = [{key: 'Referrer-Policy', value: 'no-referrer, strict-origin-when-cross-origin'}];
   headers['strict-transport-security'] = [{key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubdomains'}];
   headers['x-content-type-options'] = [{key: 'X-Content-Type-Options', value: 'nosniff'}];
