@@ -838,7 +838,9 @@ heroku config:edit --remote heroku
 
 ==== Awesome Security Headers with AWS CloudFront + S3
 
-If you test your new CloudFront + S3 site on https://securityheaders.com/[securityheaders.com], you'll get an **F**. To solve this, you can use https://aws.amazon.com/blogs/networking-and-content-delivery/adding-http-security-headers-using-lambdaedge-and-amazon-cloudfront/[Lambda@Edge to add security headers].
+. Show test results on https://securityheaders.com/[securityheaders.com].
+
+. To add custom headers to AWS, you can use https://aws.amazon.com/blogs/networking-and-content-delivery/adding-http-security-headers-using-lambdaedge-and-amazon-cloudfront/[Lambda@Edge to add security headers].
 
 . Go to the https://us-west-2.console.aws.amazon.com/lambda/home[Lambda Console] and select the `US-East-1 N` region from a drop-down list in the top right. Click **Create Function** to create a new function.
 
