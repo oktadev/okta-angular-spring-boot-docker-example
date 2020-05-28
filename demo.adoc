@@ -496,7 +496,7 @@ heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
 
 . Show security headers score using https://securityheaders.com[securityheaders.com].
 
-. Create a `notes/src/static.json` file with the configuration for secure headers and redirect all HTTP requests to HTTPS.
+. Create a `notes/static.json` file with the configuration for secure headers and redirect all HTTP requests to HTTPS.
 +
 [source,json]
 ----
@@ -534,22 +534,11 @@ heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
 },
 ----
 
-. Modify `angular.json` to include `static.json` in its assets.
-+s
-[source,json]
-----
-"assets": [
-  "src/static.json",
-  "src/favicon.ico",
-  "src/assets"
-],
-----
-
 . Commit your changes to Git, add the static buildpack, and redeploy your Angular app.
 +
 [source,shell]
 ----
-git add src/static.json
+git add static.json
 git commit -am "Configure secure headers and static buildpack"
 heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static.git --remote angular
 git push angular master
