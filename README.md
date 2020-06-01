@@ -1,10 +1,11 @@
 # Angular Deployment Example
  
-This example shows how to deploy Angular and Spring Boot to Heroku. It also shows how to deploy Angular to Firebase, Netlify, and AWS S3 using `ng deploy`. 
+This example shows how to deploy Angular and Spring Boot apps with Docker. Specifically, it shows how to:
 
-<!-- 
-Please read [Build Beautiful Angular Apps with Bootstrap](https://developer.okta.com/blog/2020/03/02/angular-bootstrap) to see how this app was created.
--->
+* Build Angular containers with `Dockerfile`
+* Combine Angular and Spring Boot in a JAR
+* Build Docker images with Jib
+* Build Docker images with Buildpacks
 
 **Prerequisites:** 
 
@@ -24,8 +25,8 @@ Please read [Build Beautiful Angular Apps with Bootstrap](https://developer.okta
 To install this example application, run the following commands:
 
 ```bash
-git clone https://github.com/oktadeveloper/okta-angular-deployment-example.git
-cd okta-angular-deployment-example
+git clone https://github.com/oktadeveloper/okta-angular-spring-boot-docker-example.git
+cd okta-angular-spring-boot-docker-example
 ```
 
 This will get a copy of the project installed locally. To install all of its dependencies and start each app, follow the instructions below.
@@ -54,39 +55,10 @@ Start your Spring Boot app by navigating to the `notes-api` directory, sourcing 
 ```bash
 cd notes-api
 source okta.env
-./gradlew bootRun
+./gradlew bootRun -Pprod
 ```
 
-### Angular Configuration
-
-To create a new OIDC app for Angular on Okta:
-
-1. Log in to your developer account, navigate to **Applications**, and click on **Add Application**.
-3. Select **Single-Page App** and click **Next**. 
-4. Give the application a name, set the login redirect URI to `http://localhost:4200/callback`, and click **Done**.
-
-Copy the `issuer` and `clientId` into `notes/src/app/auth-routing.module.ts`.
-
-```typescript
-const oktaConfig = {
-  issuer: 'https://{yourOktaDomain}/oauth2/default',
-  redirectUri: window.location.origin + '/callback',
-  clientId: '{yourClientId}',
-  pkce: true
-};
-```
-
-Navigate into the `notes` folder and run:
- 
-```bash
-npm install && npm start
-```
-
-Open your browser to <http://localhost:4200>, log in, and create notes to your hearts content!
-
-**TIP:** If you get a CORS error, you'll need to add `http://localhost:4200` as a trusted origin on Okta (**API** > **Trusted Origins**).
-
-For instructions on how to deploy these applications to the cloud, please read the blog post!
+For instructions on how to build Docker images and deploy these applications to the cloud, please read the blog post!
 
 ## Links
 
