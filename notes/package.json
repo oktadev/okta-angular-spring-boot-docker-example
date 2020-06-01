@@ -7,7 +7,9 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "docker": "docker build -t ng-notes .",
+    "ng-notes": "docker run -p 4200:80 ng-notes"
   },
   "private": true,
   "dependencies": {

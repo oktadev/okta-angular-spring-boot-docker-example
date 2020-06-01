@@ -84,6 +84,316 @@ ng serve
 git commit -am "Add Okta OIDC Configuration"
 ----
 
+=== Create a Docker Container for Your Angular App
+
+. Create a `Dockerfile` that uses Node and Nginx as a web server.
++
+[source,docker]
+.notes/Dockerfile
+----
+FROM node:14.1-alpine AS builder
+
+WORKDIR /opt/web
+COPY package.json package-lock.json ./
+RUN npm install
+
+ENV PATH="./node_modules/.bin:$PATH"
+
+COPY . ./
+RUN ng build --prod
+
+FROM nginx:1.17-alpine
+COPY nginx.config /etc/nginx/conf.d/default.conf
+COPY --from=builder /opt/web/dist/notes /usr/share/nginx/html
+----
+
+. Create `nginx.config` to make Nginx SPA-aware.
++
+[source,config]
+.notes/nginx.config
+----
+server {
+    listen   80;
+    server_name  _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+----
+
+. Build your Docker image.
++
+[source,shell]
+----
+docker build -t ng-notes .
+----
+
+. Run it locally on port 4200 using the `docker run` command.
++
+[source,shell]
+----
+docker run -p 4200:80 ng-notes
+----
+
+. You can add these Docker commands as scripts to your `package.json` file.
++
+[source,json]
+----
+"docker": "docker build -t ng-notes .",
+"ng-notes": "docker run -p 4200:80 ng-notes"
+----
+
+NOTE: The `docker run` command will serve up the production version of the Angular app, which has its backend configured to point to `\https://bootiful-angular.herokuapp.com` on Heroku. You'll need to deploy your Spring Boot app to a similar public URL for Angular + Docker to work.
+
+==== Deploy Spring Boot to Heroku
+
+. Open a terminal and log in to your Heroku account.
++
+[source,shell]
+----
+heroku login
+----
+
+. You should already have a Heroku app that you added Okta to. Let's use it for hosting Spring Boot. Run `heroku apps` and you'll see the one you created.
++
+[source,shell]
+----
+heroku apps
+----
+
+. Associate your existing Git repo with the app on Heroku.
++
+[source,shell]
+----
+heroku git:remote -a $APP_NAME
+----
+
+. Set the `APP_BASE` config variable to point to the `notes-api` directory and add buildpacks.
++
+[source,shell]
+----
+heroku config:set APP_BASE=notes-api
+heroku buildpacks:add https://github.com/lstoll/heroku-buildpack-monorepo
+heroku buildpacks:add heroku/gradle
+----
+
+. Attach a PostgreSQL database to your app.
++
+[source,shell]
+----
+heroku addons:create heroku-postgresql
+----
+
+. Override the `GRADLE_TASK` config var.
++
+[source,shell]
+----
+heroku config:set GRADLE_TASK="bootJar -Pprod"
+----
+
+. Run the following command and remove `_WEB` from the two Okta variables that have it.
++
+[source,shell]
+----
+heroku config:edit
+----
+
+. Deploy to Heroku.
++
+[source,shell]
+----
+git push heroku master
+----
+
+. By default, JPA is configured to create your database schema each time. Change it to simply validate.
++
+[source,shell]
+----
+heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
+----
+
+. Configure your Angular app to use your Heroku-deployed Spring Boot app for its production URL.
++
+[source,typescript]
+----
+export const environment = {
+  production: true,
+  apiUrl: 'https://<your-heroku-app>.herokuapp.com'
+};
+----
+
+. Add `\http://localhost:4200` as an allowed origin on Heroku.
++
+[source,shell]
+----
+heroku config:set ALLOWED_ORIGINS=http://localhost:4200 --remote heroku
+----
+
+. Rebuild your Angular Docker container and run it.
++
+[source,shell]
+----
+npm run docker
+npm run ng-notes
+----
+
+. Open your browser to `http://localhost:4200`, log in, and confirm you can add notes.
+
+=== Deploy Angular + Docker to Heroku
+
+. If your project has a `Dockerfile`, you can deploy your app directly using the Heroku Container Registry!
+
+. Make sure you're in the `notes` directory, then log in to Heroku's Container Registry.
++
+[source,shell]
+----
+heroku container:login
+----
+
+. Create a new app.
++
+[source,shell]
+----
+heroku create
+----
+
+. Add the Git URL as a new remote named `docker`.
++
+[source,shell]
+----
+git remote add docker https://git.heroku.com/<your-app-name>.git
+----
+
+. Update `nginx.config` so it reads from a `$PORT` environment variable if it's set, otherwise default it to 80.
++
+[source,config]
+----
+server {
+    listen       ${PORT:-80};
+    server_name  _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $$uri /index.html;
+    }
+}
+----
+
+. Update your `Dockerfile` so it uses https://github.com/a8m/envsubst[a8m/envsubst], which allows default variables.
++
+[source,docker]
+----
+FROM node:14.1-alpine AS builder
+
+WORKDIR /opt/web
+COPY package.json package-lock.json ./
+RUN npm install
+
+ENV PATH="./node_modules/.bin:$PATH"
+
+COPY . ./
+RUN ng build --prod
+
+FROM nginx:1.17-alpine
+RUN apk --no-cache add curl
+RUN curl -L https://github.com/a8m/envsubst/releases/download/v1.1.0/envsubst-`uname -s`-`uname -m` -o envsubst && \
+    chmod +x envsubst && \
+    mv envsubst /usr/local/bin
+COPY ./nginx.config /etc/nginx/nginx.template
+CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/nginx.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+COPY --from=builder /opt/web/dist/notes /usr/share/nginx/html
+----
+
+. Then, push your Docker image to Heroku's Container Registry.
++
+[source,shell]
+----
+heroku container:push web --remote docker
+----
+
+. Release the image of your app:
++
+[source,shell]
+----
+heroku container:release web --remote docker
+----
+
+. And open the app in your browser:
++
+[source,shell]
+----
+heroku open --remote docker
+----
+
+. Update your Spring Boot app to add your new app as an allowed origin.
++
+[source,shell]
+----
+heroku config:edit --remote heroku
+----
+
+. You'll also need to add your app's URL to Okta as a valid redirect URI.
+
+. Log in and show previously created note.
+
+==== A-Rated Security Headers for Nginx in Docker
+
+. Test your freshly-deployed Angular app with https://securityheaders.com/[securityheaders.com].
+
+. Fix your score by modifying `nginx.config` to add security headers.
++
+[source,config]
+----
+server {
+    listen       ${PORT:-80};
+    server_name  _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $$uri /index.html;
+    }
+
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com";
+    add_header Referrer-Policy "no-referrer, strict-origin-when-cross-origin";
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Feature-Policy "accelerometer 'none'; camera 'none'; microphone 'none'";
+}
+----
+
+. Then, redeploy.
++
+[source,shell]
+----
+heroku container:push web --remote docker
+heroku container:release web --remote docker
+----
+
+. Test again. You should get an **A** this time!
+
+
+=== Combine Your Angular + Spring Boot App into a Single JAR
+==== Update Your Angular App’s Authentication Mechanism
+==== Configure Spring Boot to Host an Angular SPA
+==== Modify Gradle to Build a Single JAR
+=== Dockerize Angular + Spring Boot with Jib
+==== Run Your Spring Boot Docker App with Docker Compose
+==== Deploy Your Spring Boot + Angular Container to Docker Hub
+=== Heroku 💜 Spring Boot + Docker
+=== Knative 💙 Spring Boot + Docker
+=== Cloud Foundry 💚 Spring Boot + Docker
+=== sUse Cloud Native Buildpacks to Build Docker Images
+=== Easy Docker Images with Spring Boot 2.3
 
 == Containers FTW!
 
