@@ -1,4 +1,4 @@
-# Angular Deployment Example
+# Angular + Spring Boot Docker Example
  
 This example shows how to deploy Angular and Spring Boot apps with Docker. Specifically, it shows how to:
 
