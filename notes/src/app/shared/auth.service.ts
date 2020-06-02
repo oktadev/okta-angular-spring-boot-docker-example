@@ -37,8 +37,7 @@ export class AuthService {
   }
 
   login(): void {
-    location.href =
-      `${location.origin}${this.location.prepareExternalUrl('oauth2/authorization/okta')}`;
+    location.href = `${location.origin}${this.location.prepareExternalUrl('oauth2/authorization/okta')}`;
   }
 
   logout(): void {
