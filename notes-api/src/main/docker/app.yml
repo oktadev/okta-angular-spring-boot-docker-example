@@ -1,0 +1,17 @@
+version: '2'
+services:
+  boot-app:
+    image: mraible/bootiful-angular
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notes-postgresql:5432/notes
+      - OKTA_OAUTH2_ISSUER=${OKTA_OAUTH2_ISSUER}
+      - OKTA_OAUTH2_CLIENT_ID=${OKTA_OAUTH2_CLIENT_ID}
+      - OKTA_OAUTH2_CLIENT_SECRET=${OKTA_OAUTH2_CLIENT_SECRET}
+    ports:
+      - 8080:8080
+    depends_on:
+      - notes-postgresql
+  notes-postgresql:
+    extends:
+      file: postgresql.yml
+      service: notes-postgresql

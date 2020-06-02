@@ -361,7 +361,7 @@ server {
         try_files $$uri /index.html;
     }
 
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'none'; connect-src 'self' https://*.okta.com https://*.herokuapp.com";
     add_header Referrer-Policy "no-referrer, strict-origin-when-cross-origin";
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
     add_header X-Content-Type-Options nosniff;
@@ -490,7 +490,9 @@ export class AppComponent implements OnInit {
 }
 ----
 
-. Change the buttons in `app.component.html` to reference the `auth` service.
+. Remove `OktaAuthModule` and its related code from `app.component.spec.ts` and `home.component.spec.ts`. Add `HttpClientTestingModule` to their `TestBed` imports.
+
+. Change the buttons in `app.component.html` to reference the `auth` service and its methods.
 +
 [source,html]
 ----
@@ -524,7 +526,7 @@ export class HomeComponent implements OnInit {
 }
 ----
 
-. Delete `notes/src/app/auth-routing.module.ts`.
+. Delete `auth-routing.module.ts` and `shared/okta`.
 
 . Modify `app.module.ts` to remove the `AuthRoutingModule` import, add `HomeComponent` as a declaration, and import `HttpClientModule`.
 +
@@ -580,7 +582,7 @@ const routes: Routes = [
 apiUrl: ''
 ----
 
-. Create a `src/proxy.config.js` file to proxy requests to Spring Boot.
+. Create a `src/proxy.conf.js` file to proxy requests to Spring Boot.
 +
 [source,javascript]
 ----
@@ -619,18 +621,13 @@ npm uninstall @okta/okta-angular @oktadev/schematics
 
 ==== Configure Spring Boot to Host an Angular SPA
 
-In your Spring Boot app, you'll need to change a number of things.
-
-- Build your Angular app when you pass in `-Pprod`
-- Configure its routes so it's SPA-aware and routes all 404s to `index.html`
-- Configure security settings to allow HTML, CSS, and JavaScript to be anonymously accessed
+In your Spring Boot app, you'll need to change it to build your Angular app, configure it to be SPA-aware, and adjust security settings for static file access.
 
 . Delete `HomeController.kt`. It's no longer needed since Angular will be served up at `/`.
 
 . Create a `RouteController.kt` that routes all requests to `index.html`.
 +
 [source,kotlin]
-.notes-api/src/main/kotlin/com/okta/developer/notes/RouteController.kt
 ----
 package com.okta.developer.notes
 
@@ -740,13 +737,15 @@ class LogoutController(val clientRegistrationRepository: ClientRegistrationRepos
 ----
 
 . Modify `application*.properties` so the email is returned by `${principle.name}`.
-
++
 [source,properties]
 ----
 spring.security.oauth2.client.provider.okta.user-name-attribute=preferred_username
 ----
 
 . Remove the `allowed.origins` property from both files too.
+
+. Remove the body of `DemoApplication` since CORS is no longer needed.
 
 ==== Modify Gradle to Build a Single JAR
 
@@ -811,6 +810,7 @@ tasks.processResources {
 [source,shell]
 ----
 docker-compose -f src/main/docker/postgresql.yml up -d
+source okta.env
 java -jar build/libs/*.jar
 ----
 
@@ -822,12 +822,12 @@ java -jar build/libs/*.jar
 ----
 plugins {
     ...
-    id("com.google.cloud.tools.jib") version "2.2.0"
+    id("com.google.cloud.tools.jib") version "2.3.0"
 }
 ----
 
 . Add Jib configuration to specify your image name and the active Spring profile.
-
++
 [source,kotlin]
 ----
 jib {
@@ -855,8 +855,8 @@ jib {
 ----
 docker run --publish=8080:8080 <your-username>/bootiful-angular
 ----
-
-. However, it won't work because there's no Okta environment variables specified. You could pass them in via the command line, but that's a pain. Docker Compose to the rescue!
++
+However, it won't work because there's no Okta environment variables specified. You could pass them in via the command line, but that's a pain. Docker Compose to the rescue!
 
 . Copy `notes-api/okta.env` to `src/main/docker/.env` and change it to remove `export ` at the beginning of each line.
 
@@ -893,7 +893,7 @@ services:
 
 ==== Deploy Your Spring Boot + Angular Container to Docker Hub
 
-. [Create a Docker Hub account](https://hub.docker.com/signup) if you don't have one.
+. https://hub.docker.com/signup[Create a Docker Hub account] if you don't have one.
 
 . Run `docker login` to log in to your account, then use the `jib` task to build *and* deploy your image.
 +
@@ -923,7 +923,7 @@ heroku config:get DATABASE_URL --remote jib
 heroku config:set SPRING_DATASOURCE_URL=<value-after-@-from-last-command> --remote jib
 heroku config:set SPRING_DATASOURCE_USERNAME=<username-value-from-last-command> --remote jib
 heroku config:set SPRING_DATASOURCE_PASSWORD=<password-value-from-last-command> --remote jib
-----
+---
 
 . Add Okta to your app.
 +
@@ -943,9 +943,16 @@ heroku config:edit --remote jib
 +
 [source,shell]
 ----
-docker tag hub.docker.com/<your-username>/bootiful-angular registry.heroku.com/<heroku-app>/web
+docker tag <your-username>/bootiful-angular registry.heroku.com/<heroku-app>/web
 docker push registry.heroku.com/<heroku-app>/web
 heroku container:release web --remote jib
+----
+
+. You can watch the logs to see if it started successfully.
++
+[source,shell]
+----
+heroku logs --tail --remote jib
 ----
 
 . After it starts, set the JPA configuration so it only validates the schema.

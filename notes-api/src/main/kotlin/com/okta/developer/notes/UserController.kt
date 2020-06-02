@@ -23,7 +23,7 @@ class UserController(val repository: NotesRepository) {
     }
 
     @GetMapping("/user")
-    fun user(@AuthenticationPrincipal user: OidcUser): OidcUser {
+    fun user(@AuthenticationPrincipal user: OidcUser?): OidcUser? {
         return user;
     }
 }

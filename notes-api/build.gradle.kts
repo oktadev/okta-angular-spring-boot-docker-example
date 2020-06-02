@@ -1,10 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.moowork.gradle.node.npm.NpmTask
+
 
 plugins {
     id("org.springframework.boot") version "2.3.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
     id("se.patrikerdes.use-latest-versions") version "0.2.13"
     id("com.github.ben-manes.versions") version "0.28.0"
+    id("com.github.node-gradle.node") version "2.2.4"
+    id("com.google.cloud.tools.jib") version "2.3.0"
     kotlin("jvm") version "1.3.61"
     kotlin("plugin.spring") version "1.3.61"
     kotlin("plugin.jpa") version "1.3.61"
@@ -13,6 +17,13 @@ plugins {
 group = "com.okta.developer"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
+
+val spa = "${projectDir}/../notes";
+
+node {
+    version = "12.16.2"
+    nodeModulesDir = file(spa)
+}
 
 repositories {
     mavenCentral()
@@ -47,6 +58,15 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+val buildWeb = tasks.register<NpmTask>("buildNpm") {
+    dependsOn(tasks.npmInstall)
+    setNpmCommand("run", "build")
+    setArgs(listOf("--", "--prod"))
+    inputs.dir("${spa}/src")
+    inputs.dir(fileTree("${spa}/node_modules").exclude("${spa}/.cache"))
+    outputs.dir("${spa}/dist")
+}
+
 val profile = if (project.hasProperty("prod")) "prod" else "dev"
 
 tasks.bootRun {
@@ -55,4 +75,19 @@ tasks.bootRun {
 
 tasks.processResources {
     rename("application-${profile}.properties", "application.properties")
+    if (profile == "prod") {
+        dependsOn(buildWeb)
+        from("${spa}/dist/notes") {
+            into("static")
+        }
+    }
+}
+
+jib {
+    to {
+        image = "mraible/bootiful-angular"
+    }
+    container {
+        environment = mapOf("SPRING_PROFILES_ACTIVE" to profile)
+    }
 }
