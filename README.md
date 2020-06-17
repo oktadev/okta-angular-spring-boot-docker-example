@@ -64,7 +64,7 @@ source okta.env
 ./gradlew bootRun -Pprod
 ```
 
-For instructions on how to build Docker images and deploy these applications to the cloud, please read the blog post!
+For instructions on how to build Docker images and deploy these applications to the cloud, please read the [blog post](https://developer.okta.com/blog/2020/06/17/angular-docker-spring-boot)!
 
 ## Links
 
