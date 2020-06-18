@@ -3,9 +3,9 @@
 :commandkey: &#8984;
 :toc: macro
 
-== Angular Deployment Demo Steps
+== Angular + Docker Demo Steps
 
-In this demo, I'll show how to deploy an Angular + Spring Boot app to Heroku. I'll also show you how to use `ng deploy` to deploy to Firebase, Netlify, and AWS S3.
+In this demo, I'll show how to use Docker to create an image for your Angular app and deploy it to Heroku. Then, I’ll show how to combine Angular and Spring Boot into the same JAR artifact for deployment. You’ll learn how to Dockerize the combined apps using Jib and Cloud Native Buildpacks. Finally, I’ll show you how to deploy your Docker image to Heroku, Knative on Google Cloud, and Cloud Foundry.
 
 **Prerequisites:**
 
@@ -24,8 +24,8 @@ toc::[]
 +
 [source,shell]
 ----
-git clone https://github.com/oktadeveloper/okta-angular-bootstrap-example.git \
-okta-angular-deployment-example
+git clone https://github.com/oktadeveloper/okta-angular-deployment-example.git \
+ okta-angular-spring-boot-docker-example
 ----
 
 ==== Secure Your Angular + Spring Boot App with OIDC
@@ -59,11 +59,7 @@ source okta.env
 +
 TIP: Show how to configure environment variables in IDEA for `DemoApplication`.
 
-. Configure Angular for OIDC authentication by modifying its `auth-routing.module.ts` to use the generated issuer and client ID.
-
-. Modify the Heroku-created browser app and add `\http://localhost:4200/callback` as a **Login redirect URI** and `\http://localhost:4200` as a **Logout redirect URI**.
-
-. Add `\http://localhost:4200` as a trusted origin in **API** > **Trusted Origins**.
+. Configure Angular for OIDC authentication by modifying its `auth-routing.module.ts` to use the generated issuer and **SPA** client ID.
 
 . Install the Angular app's dependencies and start it.
 +
@@ -86,7 +82,7 @@ git commit -am "Add Okta OIDC Configuration"
 
 === Create a Docker Container for Your Angular App
 
-. Create a `Dockerfile` that uses Node and Nginx as a web server.
+. Create a `Dockerfile` that uses Node and Nginx as a web server. [`ng-docker`]
 +
 [source,docker]
 .notes/Dockerfile
@@ -107,7 +103,7 @@ COPY nginx.config /etc/nginx/conf.d/default.conf
 COPY --from=builder /opt/web/dist/notes /usr/share/nginx/html
 ----
 
-. Create `nginx.config` to make Nginx SPA-aware.
+. Create `nginx.config` to make Nginx SPA-aware. [`ng-nginx`]
 +
 [source,config]
 .notes/nginx.config
@@ -206,14 +202,16 @@ heroku config:edit
 +
 [source,shell]
 ----
-git push heroku master
+git push heroku main:master
 ----
+
+. Run `heroku open` to open your app and show authentication works.
 
 . By default, JPA is configured to create your database schema each time. Change it to simply validate.
 +
 [source,shell]
 ----
-heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote heroku
+heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate
 ----
 
 . Configure your Angular app to use your Heroku-deployed Spring Boot app for its production URL.
@@ -230,7 +228,7 @@ export const environment = {
 +
 [source,shell]
 ----
-heroku config:set ALLOWED_ORIGINS=http://localhost:4200 --remote heroku
+heroku config:set ALLOWED_ORIGINS=http://localhost:4200
 ----
 
 . Rebuild your Angular Docker container and run it.
@@ -241,7 +239,7 @@ npm run docker
 npm run ng-notes
 ----
 
-. Open your browser to `http://localhost:4200`, log in, and confirm you can add notes.
+. Open your browser to `http://localhost:4200`, log in, and confirm you can add notes. Verify data exists on Heroku at `/api/notes`.
 
 === Deploy Angular + Docker to Heroku
 
@@ -346,7 +344,7 @@ heroku config:edit --remote heroku
 
 . Test your freshly-deployed Angular app with https://securityheaders.com/[securityheaders.com].
 
-. Fix your score by modifying `nginx.config` to add security headers.
+. Fix your score by modifying `nginx.config` to add security headers. [`headers-nginx`]
 +
 [source,config]
 ----
@@ -387,7 +385,7 @@ Now I'll show you how to combine Angular + Spring Boot into a single JAR for pro
 
 ==== Update Your Angular App’s Authentication Mechanism
 
-. Create a new `AuthService` for gathering authentication information from Spring Boot.
+. Create a new `AuthService` for gathering authentication information from Spring Boot. [`ng-authservice`]
 +
 ====
 [source,typescript]
@@ -582,7 +580,7 @@ const routes: Routes = [
 apiUrl: ''
 ----
 
-. Create a `src/proxy.conf.js` file to proxy requests to Spring Boot.
+. Create a `src/proxy.conf.js` file to proxy requests to Spring Boot. [`ng-proxy`]
 +
 [source,javascript]
 ----
@@ -591,7 +589,7 @@ const PROXY_CONFIG = [
     context: ['/user', '/api', '/oauth2', '/login'],
     target: 'http://localhost:8080',
     secure: false,
-    logLevel: "debug"
+    logLevel: 'debug'
   }
 ]
 
@@ -625,7 +623,7 @@ In your Spring Boot app, you'll need to change it to build your Angular app, con
 
 . Delete `HomeController.kt`. It's no longer needed since Angular will be served up at `/`.
 
-. Create a `RouteController.kt` that routes all requests to `index.html`.
+. Create a `RouteController.kt` that routes all requests to `index.html`. [`boot-spa`]
 +
 [source,kotlin]
 ----
@@ -673,13 +671,7 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
                 .and()
             .oauth2ResourceServer().jwt()
 
-        http.requiresChannel()
-                .requestMatchers(RequestMatcher {
-                    r -> r.getHeader("X-Forwarded-Proto") != null
-                }).requiresSecure()
-
-        http.csrf()
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        ...
 
         http.headers()
                 .contentSecurityPolicy("script-src 'self'; report-to /csp-report-endpoint/")
@@ -703,7 +695,7 @@ fun user(@AuthenticationPrincipal user: OidcUser?): OidcUser? {
 }
 ----
 
-. Add a `LogoutController` that will handle expiring the session and logging out from Okta.
+. Add a `LogoutController` that will handle expiring the session and logging out from Okta. [`boot-logout`]
 +
 [source,kotlin]
 ----
@@ -736,6 +728,13 @@ class LogoutController(val clientRegistrationRepository: ClientRegistrationRepos
 }
 ----
 
+. Add a `server.port` property to `application-prod.properties` that uses a `PORT` environment variable, if it's set.
++
+[source,properties]
+----
+server.port=${PORT:8080}
+----
+
 . Modify `application*.properties` so the email is returned by `${principle.name}`.
 +
 [source,properties]
@@ -757,12 +756,12 @@ import com.moowork.gradle.node.npm.NpmTask
 
 plugins {
     ...
-    id("com.github.node-gradle.node") version "2.2.3"
+    id("com.github.node-gradle.node") version "2.2.4"
     ...
 }
 ----
 
-. Define the location of your Angular app and configuration for the Node plugin.
+. Define the location of your Angular app and configuration for the Node plugin. [`gradle-spa`]
 +
 [source,kotlin]
 ----
@@ -774,7 +773,7 @@ node {
 }
 ----
 
-. Add a `buildWeb` task:
+. Add a `buildWeb` task: [`gradle-web`]
 +
 [source,kotlin]
 ----
@@ -788,7 +787,7 @@ val buildWeb = tasks.register<NpmTask>("buildNpm") {
 }
 ----
 
-. Modify the `processRecources` task to build Angular when `-Pprod` is passed in.
+. Modify the `processResources` task to build Angular when `-Pprod` is passed in. [`gradle-resources`]
 +
 [source,kotlin]
 ----
@@ -822,11 +821,11 @@ java -jar build/libs/*.jar
 ----
 plugins {
     ...
-    id("com.google.cloud.tools.jib") version "2.3.0"
+    id("com.google.cloud.tools.jib") version "2.4.0"
 }
 ----
 
-. Add Jib configuration to specify your image name and the active Spring profile.
+. Add Jib configuration to specify your image name and the active Spring profile. [`gradle-jib`]
 +
 [source,kotlin]
 ----
@@ -915,15 +914,15 @@ git remote add jib https://git.heroku.com/<your-new-app>.git
 ----
 
 . Add PostgreSQL to this app and configure it for Spring Boot using the following commands:
-
++
 [source,shell]
 ----
 heroku addons:create heroku-postgresql --remote jib
 heroku config:get DATABASE_URL --remote jib
-heroku config:set SPRING_DATASOURCE_URL=<value-after-@-from-last-command> --remote jib
+heroku config:set SPRING_DATASOURCE_URL=jdbc:postgresql://<value-after-@-from-last-command> --remote jib
 heroku config:set SPRING_DATASOURCE_USERNAME=<username-value-from-last-command> --remote jib
 heroku config:set SPRING_DATASOURCE_PASSWORD=<password-value-from-last-command> --remote jib
----
+----
 
 . Add Okta to your app.
 +
@@ -962,6 +961,8 @@ heroku logs --tail --remote jib
 heroku config:set SPRING_JPA_HIBERNATE_DDL_AUTO=validate --remote jib
 ----
 
+. Make sure your Dockerfied Angular + Spring Boot app works and test its headers on https://securityheaders.com[securityheaders.com].
+
 === Knative 💙 Spring Boot + Docker
 
 . Create a https://cloud.google.com/[Google Cloud account] and click **Get started for free**.
@@ -989,7 +990,7 @@ gcloud config set compute/region us-central1
 ----
 
 . Create a Kubernetes cluster:
-
++
 [source,shell]
 ----
 gcloud beta container clusters create knative \
@@ -1022,7 +1023,7 @@ https://github.com/knative/serving/raw/v0.14.0/third_party/istio-1.5.1/istio-min
 ----
 
 . Install Knative:
-
++
 [source,shell]
 ----
 kubectl apply --selector knative.dev/crd-install=true -f \
@@ -1096,7 +1097,7 @@ metadata:
   name: config-certmanager
   namespace: knative-serving
 data:
- issuerRef: |
+  issuerRef: |
     kind: ClusterIssuer
     name: letsencrypt-http01-issuer
 EOF
@@ -1114,7 +1115,7 @@ EOF
 ----
 
 . Run the following command to deploy everything, but change the `<...>` placeholders to match your values first.
-
++
 [source,shell]
 ----
 kubectl apply -f - <<EOF
@@ -1199,6 +1200,15 @@ spec:
 EOF
 ----
 
+. Get the URL of your app.
++
+[source,shell]
+----
+kubectl get ksvc bootiful-angular
+----
+
+. Verify your app is running, then add redirect URIs on Okta, and log in.
+
 . Run the command below to change it so Hibernate doesn't try to recreate your schema on restart.
 +
 [source,shell]
@@ -1230,9 +1240,6 @@ spec:
             value: validate
 EOF
 ----
-// todo: try the above without specifying all values
-
-. Verify your app is running, then add redirect URIs on Okta, and log in.
 
 === Cloud Foundry 💚 Spring Boot + Docker
 
@@ -1242,13 +1249,6 @@ EOF
 
   brew install cloudfoundry/tap/cf-cli
 
-. Enable Docker support:
-+
-[source,shell]
-----
-cf enable-feature-flag diego_docker
-----
-
 . Run the following commands, where `secure-notes` is a unique name for your app.
 +
 [source,shell]
@@ -1256,7 +1256,7 @@ cf enable-feature-flag diego_docker
 cf login
 
 # Deploy the image from Docker Hub
-cf push -o <your-username>/bootiful-angular secure-notes
+cf push --no-start -o <your-username>/bootiful-angular secure-notes
 
 # Create a PostgreSQL instance
 cf cs elephantsql turtle secure-notes-psql
@@ -1267,6 +1267,12 @@ cf bs secure-notes secure-notes-psql
 # Display the credentials from the PostgreSQL instance
 cf env secure-notes
 ----
+
+. To get your PostgreSQL URL run the following command where `secure-notes` is your app name.
+
+  cf env secure-notes
++
+Make sure to replace `postgres://` with `jdbc:postgresql://` when setting the datasource URL.
 
 . Set environment variables for connecting to PostgreSQL and Okta.s
 +
@@ -1283,7 +1289,16 @@ cf set-env $APP_NAME OKTA_OAUTH2_CLIENT_SECRET <your-okta-client-id>
 cf restage $APP_NAME
 ----
 
-. Your app, running in Docker, should now be available at `\http://<your-app-name>.cfapps.io`.
+. Run `cf start secure-notes` and your app should be available at `\http://<your-app-name>.cfapps.io`.
+
+. You'll need to add its URL (+ `/login/oauth2/code/okta`) as a **Login redirect URI** and **Logout redirect URI** on Okta in order to log in.
+
+. You'll also want to configure JPA so it doesn't recreate the schema on each restart.
++
+[source,shell]
+----
+cf set-env $APP_NAME SPRING_JPA_HIBERNATE_DDL_AUTO validate
+----
 
 === Use Cloud Native Buildpacks to Build Docker Images
 
@@ -1307,19 +1322,19 @@ The https://paketo.io/[Paketo] Java buildpack is used by default to create image
 By default, Spring Boot will use your `$artifactId:$version` for the image name. That is, `notes-api:0.0.1-SNAPSHOT`. You can override this with an `--imageName` parameter.
 
 . Build and run the image with the commands below.
-
++
 [source,shell]
 ----
-./gradlew bootBuildImage --imageName <your-username>/bootiful-angular -Pprod
+./gradlew bootBuildImage --imageName mraible/bootiful-angular -Pprod
 docker-compose -f src/main/docker/app.yml up
 ----
 
 . Open a browser to `http://localhost:8080`, log in, and add notes. Pretty neat, don't you think!? 😃
 
+TIP: Learn more in https://twitter.com/phillip_webb[Phil Webb's] https://spring.io/blog/2020/01/27/creating-docker-images-with-spring-boot-2-3-0-m1[Creating Docker images with Spring Boot 2.3.0.M1] blog post or his excellent https://spring.io/blog/2020/06/18/what-s-new-in-spring-boot-2-3[What's new in Spring Boot 2.3] video.
+
 == Containers FTW!
 
 ⚡️ Find the code on GitHub: https://github.com/oktadeveloper/okta-angular-spring-boot-docker-example[@oktadeveloper/okta-angular-spring-boot-docker-example].
 
-////
-👀 Read the blog post: https://developer.okta.com/blog/2020/01/09/java-rest-api-showdown[Java REST API Showdown: Which is the Best Framework on the Market?].
-////
+🚀 Read the blog post: https://developer.okta.com/blog/2020/06/17/angular-docker-spring-boot[Angular + Docker with a Big Hug from Spring Boot].
